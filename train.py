@@ -7,7 +7,25 @@ import time
 import tensorflow as tf
 
 from utils import load_text, split_input_target
-from model import GRU_model
+from model import GRU_model, LSTM_model
+
+# Parameters
+# ==================================================
+
+# Data loading params
+tf.flags.DEFINE_string("dataset", "Data/republic_clean.txt", "Data file for the task")
+
+# Model Hyperparameters
+tf.flags.DEFINE_integer("embedding_dim", 512, "Dimensionality of character embedding (default: 128)")
+tf.flags.DEFINE_integer("RNN units", 1024, "Dimensionality of character embedding (default: 128)")
+
+# Training parameters
+tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
+tf.flags.DEFINE_integer("num_epochs", 40, "Number of training epochs ")
+
+
+FLAGS = tf.flags.FLAGS
+FLAGS(sys.argv)
 
 def preprocess(data, batch_size, buffer_size):
     """
@@ -40,6 +58,7 @@ def preprocess(data, batch_size, buffer_size):
     return dataset
 
 def train(model):
+
     
 
 
