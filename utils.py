@@ -28,3 +28,6 @@ def split_input_target(chunk):
     input_text = chunk[:-1]
     target_text = chunk[1:]
     return input_text, target_text
+
+def loss(labels, logits):
+  return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
