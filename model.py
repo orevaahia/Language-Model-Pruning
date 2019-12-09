@@ -11,7 +11,6 @@ def GRU_model(vocab_size, embedding_dim, rnn_units, batch_size):
         batch_size: Batch size
     Returns:
         GRU model 
-
     """
     model = tf.keras.Sequential([
     tf.keras.layers.Embedding(vocab_size, embedding_dim,
