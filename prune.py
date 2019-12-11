@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 
 import tensorflow as tf 
 from tensorflow.python import keras
@@ -77,7 +78,7 @@ def train_pruned_model(model, dataset, vocab):
     initial_sparsity=0.3, final_sparsity=0.7, begin_step=1000, end_step=3000))
     pruned_model.compile(optimizer='adam', loss=loss)
 
-    history = pruned_model.fit(dataset, epochs=40,
+    pruned_model.fit(dataset, epochs=40,
           callbacks=[pruning_callbacks.UpdatePruningStep()]
           )
     # Save the original model for size comparison later

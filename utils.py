@@ -1,5 +1,6 @@
 import numpy as np 
 import string
+import tensorflow as tf
 
 def load_text(data):
     """
