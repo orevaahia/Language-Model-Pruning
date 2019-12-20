@@ -1,5 +1,15 @@
 import tensorflow as tf
+from tensorflow_model_optimization.sparsity import keras as sparsity
 
+#end_step = np.ceil(1.0 * num_train_samples / batch_size).astype(np.int32) * epochs
+
+pruning_params = {
+      'pruning_schedule': sparsity.PolynomialDecay(initial_sparsity=0.50,
+                                                   final_sparsity=0.90,
+                                                   begin_step=2000,
+                                                   end_step= 6000,
+                                                   frequency=100)
+}
 
 def GRU_model(vocab_size, embedding_dim, rnn_units, batch_size):
     """
@@ -11,6 +21,7 @@ def GRU_model(vocab_size, embedding_dim, rnn_units, batch_size):
         batch_size: Batch size
     Returns:
         GRU model 
+
     """
     model = tf.keras.Sequential([
     tf.keras.layers.Embedding(vocab_size, embedding_dim,
@@ -44,8 +55,34 @@ def LSTM_model(vocab_size, embedding_dim, rnn_units, batch_size):
     tf.keras.layers.LSTM(rnn_units,
                         return_sequences=True,
                         stateful=True),
+    tf.keras.layers.LSTM(rnn_units,
+                        return_sequences=True,
+                        stateful=True),
     tf.keras.layers.Dense(vocab_size)
    ])
+    return model
+def pruned_lstm(vocab_size, embedding_dim, rnn_units, batch_size):
+  """
+  
+  """
+
+  pruned_model = tf.keras.Sequential([
+      tf.keras.layers.Embedding(vocab_size, embedding_dim,
+                              batch_input_shape=[batch_size, None]),
+      sparsity.prune_low_magnitude(
+          tf.keras.layers.LSTM(rnn_units,
+                        return_sequences=True,
+                        stateful=True), **pruning_params),
+      sparsity.prune_low_magnitude(
+          tf.keras.layers.LSTM(rnn_units,
+                        return_sequences=True,
+                        stateful=True), **pruning_params),
+      sparsity.prune_low_magnitude(
+          tf.keras.layers.Dense(vocab_size), **pruning_params)
+      
+  ])
+  
+  return pruned_model
 
 def print_model_sparsity(pruned_model):
   """Prints sparsity for the pruned layers in the model.
@@ -74,4 +111,3 @@ def print_model_sparsity(pruned_model):
                 for weight in prunable_weights
             ])))
   print("\n")
-

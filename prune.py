@@ -1,5 +1,6 @@
-import sys
 import numpy as np
+import sys
+import tempfile
 
 import tensorflow as tf 
 from tensorflow.python import keras
@@ -21,23 +22,24 @@ from model import GRU_model, print_model_sparsity
 # ==================================================
 
 # Data loading params
-tf.flags.DEFINE_string("dataset", "Data/republic_clean.txt", "Data file for the task")
+tf.app.flags.DEFINE_string("dataset", "Data/republic_clean.txt", "Data file for the task")
 
 # Model Hyperparameters
-tf.flags.DEFINE_integer("embedding_dim", 512, "Dimensionality of character embedding (default: 128)")
-tf.flags.DEFINE_integer("RNN_units", 1024, "Dimensionality of character embedding (default: 128)")
+tf.app.flags.DEFINE_integer("embedding_dim", 512, "Dimensionality of character embedding (default: 128)")
+tf.app.flags.DEFINE_integer("RNN_units", 1024, "Dimensionality of character embedding (default: 128)")
 
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-tf.flags.DEFINE_integer("num_epochs", 40, "Number of training epochs ")
-tf.flags.DEFINE_integer("buffer_size", 1000, "Buffer size for shuffling ")
+tf.app.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
+tf.app.flags.DEFINE_integer("num_epochs", 50, "Number of training epochs ")
+tf.app.flags.DEFINE_integer("buffer_size", 1000, "Buffer size for shuffling ")
+tf.app.flags.DEFINE_boolean("drop_remainder", True, "Drop last batch if it has fewer batch size elements")
 
-FLAGS = tf.flags.FLAGS
+FLAGS = tf.app.flags.FLAGS
 FLAGS(sys.argv)
 
 def preprocess():
     """
-    
+    Prepare data 
     """
     data = FLAGS.dataset
     text = load_text(data)
@@ -56,13 +58,13 @@ def preprocess():
     char_dataset = tf.data.Dataset.from_tensor_slices(text_as_int)
 
     # The batch method lets us easily convert these individual characters to sequences of the desired size.
-    sequences = char_dataset.batch(seq_length+1, drop_remainder=True)
+    sequences = char_dataset.batch(seq_length+1, drop_remainder=FLAGS.drop_remainder)
 
     # For each sequence, duplicate and shift it to form the input and target text by using the map method to apply a simple function to each batch:
     dataset = sequences.map(split_input_target)
 
     # shuffle the data and pack it into batches.
-    dataset = dataset.shuffle(FLAGS.buffer_size).batch(FLAGS.batch_size, drop_remainder=True)
+    dataset = dataset.shuffle(FLAGS.buffer_size).batch(FLAGS.batch_size, drop_remainder=FLAGS.drop_remainder)
     
     return vocab, dataset
 
@@ -83,7 +85,7 @@ def train_pruned_model(model, dataset, vocab):
           )
     # Save the original model for size comparison later
 
-    _ , keras_file = tempfile.mkstemp('.h5')
+    _ , keras_file = tempfile.mkstemp('.h5', dir= 'models/')
     print('SAving model to: ', keras_file)
     tf.keras.models.save_model(pruned_model, keras_file, include_optimizer=False)
 
@@ -94,3 +96,5 @@ def main(argv=None):
     pruned_model = train_pruned_model(GRU_model, dataset, vocab)
 if __name__ == '__main__':
     tf.app.run()
+#vocab, dataset = preprocess()
+#pruned_model = train_pruned_model(GRU_model, dataset, vocab)
